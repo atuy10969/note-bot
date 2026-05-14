@@ -1,0 +1,18 @@
+# 認証情報・機密ファイル
+config.py
+note_session.json
+
+# Chrome プロフィール
+chrome_debug_profile/
+chrome_profile/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# ログ
+*.log
+
+# スクリーンショット（デバッグ用）
+*.png
