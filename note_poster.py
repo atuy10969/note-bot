@@ -13,6 +13,8 @@ def post_to_note(title, body, publish=True):
         f"--user-data-dir={DEBUG_PROFILE}",
         "--no-first-run",
         "--no-default-browser-check",
+        "--no-restore-last-session",
+        "--restore-last-session=0",
         "about:blank"
     ])
     time.sleep(4)
@@ -32,25 +34,38 @@ def post_to_note(title, body, publish=True):
                 raise Exception("セッション切れ。save_session.py を再実行してください。")
             print("ログイン済み確認")
 
+            # 投稿ボタンをクリック前の既存タブURLを記録
+            existing_urls = set(pg.url for pg in context.pages)
+
             # 「投稿」ボタンをクリック
             print("投稿ボタンをクリック中...")
             page.locator('a[href="/notes/new"]').first.click()
             time.sleep(6)
 
-            # editor.note.com の編集ページを探す（/edit/ のみ）
+            # 新しく開いたeditor.note.comタブを探す（既存URLと異なるもの）
             editor_page = None
-            for p in context.pages:
-                if "editor.note.com" in p.url and "/edit/" in p.url:
-                    editor_page = p
+            for pg in context.pages:
+                if "editor.note.com" in pg.url and "/edit/" in pg.url and pg.url not in existing_urls:
+                    editor_page = pg
                     break
+
+            # 新しいタブが見つからない場合は既存も含めて探す
+            if not editor_page:
+                for pg in context.pages:
+                    if "editor.note.com" in pg.url and "/edit/" in pg.url:
+                        editor_page = pg
+                        break
 
             if editor_page:
                 page = editor_page
             # editor.note.com にいない場合は現在のページを使う
 
-            page.wait_for_load_state("networkidle")
-            time.sleep(3)
+            page.bring_to_front()
+            page.wait_for_load_state("domcontentloaded")
+            time.sleep(5)
             print(f"エディタURL: {page.url}")
+            page.screenshot(path="debug_editor.png")
+            print("エディタ画面スクリーンショット保存: debug_editor.png")
 
             # タイトル入力（複数セレクターを試す）
             print("タイトルを入力中...")
