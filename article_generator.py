@@ -112,6 +112,11 @@ def generate_article(topic_title=None, topic_angle=None, category=None):
     )
 
     body = message.content[0].text.strip()
+
+    # ハッシュタグを末尾に追加
+    hashtags = "\n\n#就活 #インターン #サマーインターン #大学生 #理系就活 #就職活動 #28卒"
+    body = body + hashtags
+
     return topic_title, body, topic_title, category
 
 
