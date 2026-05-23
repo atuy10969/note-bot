@@ -1,12 +1,28 @@
 import time
 import os
+import sys
 import subprocess
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
 CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 DEBUG_PROFILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chrome_debug_profile")
+SESSION_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "note_session.json")
+
+
+def _is_windows() -> bool:
+    return sys.platform == "win32"
+
 
 def post_to_note(title, body, publish=True):
+    # クラウド環境（非Windows）またはnote_session.jsonがある場合はAPI方式を使う
+    if not _is_windows() or os.path.exists(SESSION_FILE):
+        from note_api import post_draft
+        if publish:
+            # API方式では現時点で下書き保存のみ対応（公開は手動）
+            print("[note_poster] API方式: 下書き保存で実行します")
+        return post_draft(title, body)
+
+    # Windows + CDPモード（ローカルPC用）
     proc = subprocess.Popen([
         CHROME_PATH,
         "--remote-debugging-port=9222",
